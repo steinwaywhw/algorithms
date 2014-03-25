@@ -1,71 +1,34 @@
-#include <malloc.h>
-#include <stdlib.h>
+#include "stack.h"
+#include <string.h>
+#include <stdio.h>
 
-#define MAX_CAP 100
-
-typedef struct _stack {
-    int data[MAX_CAP];
-    int top;            //next empty slot
-    
-    void (*push)(struct _stack *s, int e);
-    void (*pop)(struct _stack *s);
-    int (*peak)(struct _stack *s);
-    void (*is_empty)(struct _stack *s);
-} stack_t;
-
-stack_t* make_stack() {
-    stack_t *s = (stack_t *)malloc(sizeof(stack_t));
-    if (s == NULL)
-        abort();
-    
-    s->top = 0;
-    s->push = _push;
-    s->pop = _pop;
-    s->peak = _peak;
-    s->is_empty = is_empty;
-    
-    return s;
-}
-
-void destroy_stack(stack_t *s) {
-    if (s != NULL) 
-        free(s);
-}
-
-void _push(stack_t *s, int e) {
-    if (s == NULL)
-        abort();
-        
-    if (s->top == MAX_CAP)
-        abort();
-        
-    s->data[s->top] = e;
-    s->top++;
-}
-
-void _pop(stack_t *s) {
-    if (s == NULL)
-        abort();
-    
-    if (s->top == 0)
+void sort(stack_t *s) {
+    if (s == NULL || s->is_empty(s))
         return;
-        
-    s->top--;
-}
-
-int _peak(stack_t *s) {
-    if (s == NULL)
-        abort();
-        
-    if (s->top == 0)
-        return;
-        
-    return s->data[s->top-1];
-}
-
-int _is_empty(stack_t *s) {
-    if (s == NULL)
-        abort();
     
-    return s->top == 0;
+    int buf;
+    stack_t *r = make_stack();
+    
+    while (!s->is_empty(s)) {
+        buf = s->pop(s);
+        while (!r->is_empty(r) && r->peak(r) > buf)
+            s->push(s, r->pop(r));
+        r->push(r, buf);
+    }
+    
+    memcpy(s, r, sizeof(stack_t));
+    destroy_stack(r);
+}
+
+
+
+int main() {
+    stack_t *s = make_stack();
+    s->push(s, 1)->push(s, 4)->push(s, 2)->push(s, 8);
+    sort(s);
+    
+    while (!s->is_empty(s))
+        printf("%3d", s->pop(s));
+        
+    
 }
